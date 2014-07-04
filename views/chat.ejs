@@ -23,7 +23,7 @@
 <script>
 	var room_name = '<%= room_name %>';
 	var nickname = '<%= nickname %>';
-	var socket = io.connect( 'http://localhost' );
+	var socket = io.connect();
 
 	socket.on( 'message', function( data )
 	{
