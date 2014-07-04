@@ -6,14 +6,28 @@
     "start": "node ./bin/ts-chat"
   },
   "dependencies": {
-	  "socket.io": "1.0.6",
     "body-parser": "~1.0.0",
     "cookie-parser": "~1.0.1",
     "debug": "~0.7.4",
     "ejs": "~0.8.5",
-    "express": "~4.0.0",
+    "express": "^4.0.0",
+    "logfmt": "^1.1.2",
     "morgan": "~1.0.0",
     "mysql": "^2.3.2",
+    "socket.io": "1.0.6",
     "static-favicon": "~1.0.0"
-  }
+  },
+  "description": "chat service on node.js for toksong",
+  "main": "bin/ts-chat.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apposter/toksong-chat.git"
+  },
+  "author": "gill park",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/apposter/toksong-chat/issues"
+  },
+  "homepage": "https://github.com/apposter/toksong-chat"
 }
