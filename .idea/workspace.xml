@@ -86,8 +86,8 @@
       <file leaf-file-name="ts-chat" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/bin/ts-chat">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.77079797" vertical-offset="356" max-vertical-offset="945">
-              <caret line="54" column="18" selection-start-line="54" selection-start-column="18" selection-end-line="54" selection-end-column="18" />
+            <state vertical-scroll-proportion="0.77079797" vertical-offset="386" max-vertical-offset="975">
+              <caret line="56" column="26" selection-start-line="56" selection-start-column="26" selection-end-line="56" selection-end-column="26" />
               <folding />
             </state>
           </provider>
@@ -564,8 +564,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/bin/ts-chat">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.77079797" vertical-offset="356" max-vertical-offset="945">
-          <caret line="54" column="18" selection-start-line="54" selection-start-column="18" selection-end-line="54" selection-end-column="18" />
+        <state vertical-scroll-proportion="0.77079797" vertical-offset="386" max-vertical-offset="975">
+          <caret line="56" column="26" selection-start-line="56" selection-start-column="26" selection-end-line="56" selection-end-column="26" />
           <folding />
         </state>
       </provider>
