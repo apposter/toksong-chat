@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+var debug = require( 'debug' )( 'toksong-chat' );
+var app = require( '../app' );
+
+var http = require( 'http' );
+var server = http.Server( app );
+var io = require( 'socket.io' ).listen( server );
+var redis = require( 'socket.io-redis' );
+
+global.io = io;
+global.activeClients = [];
+global.rooms = {};
+
+io.adapter( redis( { host: 'localhost', port: 6379 } ) );
+io.on( 'connection', function( socket )
+{
+	activeClients.push( socket );
+
+	socket.on( 'message', function( data )
+	{
+		console.log( 'message : ', data );
+
+		if( socket.room_name )
+		{
+			console.log( 'send message' );
+			io.to( socket.room_name ).emit( 'message', data );
+		}
+	} );
+
+	socket.on( 'disconnect', function()
+	{
+		activeClients.splice( activeClients.indexOf( socket ), 1 );
+	} );
+
+	socket.on( 'join', function( data )
+	{
+		console.log( 'join : ', data );
+
+		socket.room_name = data.room_name;
+		socket.nickname = data.nickname;
+
+		socket.join( data.room_name );
+
+		var clients = {};
+
+		for( var i = 0; i < activeClients.length; i++ )
+		{
+			clients[ activeClients[ i ].id ] = activeClients[ i ].nickname;
+		}
+
+		io.to( data.room_name ).emit( 'join', clients );
+	} );
+} );
+
+server.listen( 3000, function()
+{
+	debug( 'Express server listening on port ' + server.address().port );
+} );

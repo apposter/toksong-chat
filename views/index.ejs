@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><%= title %> | home</title>
+<link rel='stylesheet' href='/css/style.css' />
+</head>
+<body>
+<h1><%= title %> : home</h1>
+
+<form action="/chat" method="post" id="join-chat">
+	<label for="room-name">Room name to join</label>
+	<input type="text" id="room_name" name="room_name" />
+	<br />
+	<label for="nickname">Nickname</label>
+	<input type="text" id="nickname" name="nickname" />
+	<br />
+	<input type="submit" value="join" />
+</form>
+
+<script src="/js/jquery-2.1.1.min.js"></script>
+<script>
+	$( '#join-chat' ).on( 'submit', function()
+	{
+		if( !$( '#room_name' ).val() )
+		{
+			alert( 'please set room name.' );
+			$( '#room_name' ).focus();
+		}
+		else if( !$( '#nickname' ).val() )
+		{
+			alert( 'please set nickname.' );
+			$( '#nickname' ).focus();
+		}
+		else
+		{
+			return true;
+		}
+
+		return false;
+	} );
+</script>
+</body>
+</html>
