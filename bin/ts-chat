@@ -10,6 +10,7 @@ var redis = require( 'socket.io-redis' );
 global.io = io;
 global.activeClients = [];
 global.rooms = {};
+global.app = app;
 
 //io.adapter( redis( { host: 'localhost', port: 6379 } ) );
 io.on( 'connection', function( socket )
@@ -29,7 +30,28 @@ io.on( 'connection', function( socket )
 
 	socket.on( 'disconnect', function()
 	{
-		activeClients.splice( activeClients.indexOf( socket ), 1 );
+		if( rooms[ socket.room_name ] )
+		{
+			console.log( 'disconnected socket.id = ' + socket.id + ', idx = ', rooms[ socket.room_name ].indexOf( socket ) );
+
+			if( rooms[ socket.room_name ].indexOf( socket ) > -1 )
+				rooms[ socket.room_name ].splice( rooms[ socket.room_name ].indexOf( socket ), 1 );
+
+			console.log( 'rooms[ ' + socket.room_name + ' ].length', rooms[ socket.room_name ].length );
+
+			if( !rooms[ socket.room_name ].length )
+			{
+				console.log( 'delete room : ', rooms[ socket.room_name ] );
+
+				rooms[ socket.room_name ] = null;
+//				delete rooms[ socket.room_name ];
+				
+				io.sockets.emit( 'rooms', rooms );
+			}
+		}
+
+		if( activeClients.indexOf( socket ) > -1 )
+			activeClients.splice( activeClients.indexOf( socket ), 1 );
 	} );
 
 	socket.on( 'join', function( data )
@@ -38,23 +60,52 @@ io.on( 'connection', function( socket )
 
 		socket.room_name = data.room_name;
 		socket.nickname = data.nickname;
-
 		socket.join( data.room_name );
 
-		var clients = {};
-
-		for( var i = 0; i < activeClients.length; i++ )
+		if( !rooms[ data.room_name ] )
 		{
-			clients[ activeClients[ i ].id ] = activeClients[ i ].nickname;
+			rooms[ data.room_name ] = [];
 		}
 
-		io.to( data.room_name ).emit( 'join', clients );
+		rooms[ data.room_name ].push( socket );
+		console.log( 'joined socket.id = ' + socket.id + ', idx = ', rooms[ socket.room_name ].indexOf( socket ) );
+
+		io.to( data.room_name ).emit( 'join', { clients: getClients(), rooms: Object.keys( rooms ) } );
 	} );
 } );
+
+var getRooms = function()
+{
+	var rooms = [];
+
+	for( var key in io.sockets.adapter.rooms )
+	{
+		if( !io.sockets.connected[ key ] && Object.keys( io.sockets.adapter.rooms[ key ] ).length )
+		{
+			console.log( 'key of rooms : ', key );
+			console.log( 'value for ' + key + ' in connected array : ', io.sockets.connected[ key ]  );
+			rooms.push( key );
+		}
+	}
+
+	return rooms;
+};
+
+var getClients = function()
+{
+	var clientsJSON = {};
+
+	activeClients.forEach( function( val, idx )
+	{
+		clientsJSON[ val.id ] = val.nickname;
+	} );
+
+	return clientsJSON;
+};
 
 var port = process.env.PORT || 3000;
 
 server.listen( port, function()
 {
-	debug( 'Express server listening on port ' + server.address().port );
+	console.log( 'Express server listening on port ' + server.address().port );
 } );

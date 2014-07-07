@@ -1,26 +1,36 @@
 var express = require( 'express' );
 var router = express.Router();
 
-router.post( '/', function( req, res )
-{
-	res.render( 'chat', { title: 'toksong-chat', room_name: req.params.room_name, nickname: req.params.nickname } );
-} );
+router.route( '/' )
+	.get( function( req, res, next )
+	{
+//		req.params.err = 'please set "room name" and "nickname"!';
+//		req.url = '/';
 
-router.get( '/', function( req, res )
-{
-	res.send( 'toksong chat!' );
-} );
+//		next();
+
+		res.redirect( '/?err=' + 'please set "room name" and "nickname"!' );
+	} )
+	.post( function( req, res )
+	{
+		res.render( 'chat',
+			{
+				title    : 'toksong-chat',
+				room_name: req.param( 'room_name' ),
+				nickname : req.param( 'nickname' ),
+				res      : res
+			} );
+	} );
 
 router.get( '/:room_name/:nickname', function( req, res )
 {
-	var clientsJSON = {};
-
-	activeClients.forEach( function( val, idx )
-	{
-		clientsJSON[ val.id ] = val.nickname;
-	} );
-
-	res.render( 'chat', { title: 'toksong-chat', room_name: req.params.room_name, nickname: req.params.nickname, clients: clientsJSON } );
+	res.render( 'chat',
+		{
+			title    : 'toksong-chat',
+			room_name: req.params.room_name,
+			nickname : req.params.nickname,
+			res      : res
+		} );
 } );
 
 module.exports = router;

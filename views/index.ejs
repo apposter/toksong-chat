@@ -6,7 +6,14 @@
 </head>
 <body>
 <h1><%= title %> : home</h1>
-
+<%
+if( err )
+{
+%>
+<div id="err"><%= err %></div>
+<%
+}
+%>
 <form action="/chat" method="post" id="join-chat">
 	<label for="room-name">Room name to join</label>
 	<input type="text" id="room_name" name="room_name" />

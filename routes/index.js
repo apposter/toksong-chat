@@ -4,7 +4,7 @@ var router = express.Router();
 /* GET home page. */
 router.get( '/', function( req, res )
 {
-	res.render( 'index', { title: 'toksong-chat' } );
+	res.render( 'index', { title: 'toksong-chat', err: req.param( 'err' ) } );
 } );
 
 module.exports = router;

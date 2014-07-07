@@ -1,1 +1,1 @@
-web: node ./bin/ts-chat
+web: node --max-stack-size=32000 ./bin/ts-chat

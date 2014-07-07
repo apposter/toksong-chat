@@ -1,8 +1,57 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+body
+{
+	padding : 50px;
+	font    : 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
-a {
-  color: #00B7FF;
+a
+{
+	color : #00b7ff;
+}
+
+#err
+{
+	color       : #f00;
+	font-size   : 18px;
+	font-weight : bold;
+	margin      : 20px;
+}
+
+.list-wrap
+{
+	border        : 3px dashed #000;
+	border-radius : 20px;
+	padding       : 20px;
+	margin        : 10px 0 20px 0;
+	position      : relative;
+}
+
+.list-wrap > .header
+{
+	position   : absolute;
+	background : #fff;
+	top        : -35px;
+}
+
+.list-wrap.first
+{
+	margin-top : 50px;
+}
+
+.list-wrap.last
+{
+	margin-bottom : 50px;
+}
+
+#messages > .list > p > span
+{
+	display     : inline-block;
+	height      : 20px;
+	line-height : 20px;
+}
+
+#messages > .list > p > .nickname
+{
+	margin : 0 10px;
+	font-weight  : bold;
 }

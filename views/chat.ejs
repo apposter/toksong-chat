@@ -4,14 +4,23 @@
 <title><%= title %> | chat room(<%= room_name %>)</title>
 <link rel='stylesheet' href='/css/style.css' />
 </head>
-<body>
+<body class="chat">
 <h1><%= title %> : chat room(<%= room_name %>)</h1>
 
-<h2>user list</h2>
-<div id="client-list"></div>
+<div id="rooms" class="list-wrap first">
+	<h2 class="header">rooms</h2>
+	<div class="list"></div>
+</div>
 
-<h2>messages</h2>
-<div id="message-list"></div>
+<div id="clients" class="list-wrap">
+	<h2 class="header">users</h2>
+	<div class="list"></div>
+</div>
+
+<div id="messages" class="list-wrap last">
+	<h2 class="header">messages</h2>
+	<div class="list"></div>
+</div>
 
 <form action="/chat/<%= room_name %>/<%= nickname %>" method="post" id="message-form">
 	<input type="text" id="message-text" name="message-text" />
@@ -24,36 +33,61 @@
 	var room_name = '<%= room_name %>';
 	var nickname = '<%= nickname %>';
 	var socket = io.connect();
+	var updateRooms = function( data )
+	{
+		$( '#rooms .list' ).empty();
+		for( var i = 0; i < data.length; i++ )
+		{
+			var $room = $( '<div data-room="' + data[ i ] + '">' + data[ i ] + '</div>' );
+			$( '#rooms .list' ).append( $room );
+		}
+	}
 
 	socket.on( 'message', function( data )
 	{
 		console.log( 'message : ', data );
-		$( '#message-list' ).append( '<p>' + data.nickname + ' : ' + data.message + '</p>' );
+
+		var $message = $( '<p><span class="nickname">' + data.nickname + '</span><span class="message">' + data.message + '</span></p>' );
+
+		if( data.nickname === nickname )
+			$message.css( 'background', '#eee' );
+
+		$( '#messages .list' ).append( $message );
 	} );
 
 	socket.on( 'join', function( data )
 	{
 		console.log( 'join : ', data );
 
-		$( '#client-list' ).empty();
-		$.each( data, function( key, val )
+		$( '#client-list .list' ).empty();
+		for( var key in data.clients )
 		{
-			$( '#client-list' ).append( '<p>' + val + '</p>' );
-		} );
+			var $user = $( '<div data-socket="' + key + '">' + data.clients[ key ] + '</div>' );
+			$( '#clients .list' ).append( $user );
+		}
+
+		updateRooms( data.rooms );
 	} );
 
-	socket.emit( 'join', { "room_name" : room_name, "nickname" : nickname } );
+	socket.on( 'rooms', function( data )
+	{
+		updateRooms( data );
+	} );
+
+	socket.emit( 'join', { "room_name": room_name, "nickname": nickname } );
 
 	$( '#message-form' ).on( 'submit', function()
 	{
 		if( $( '#message-text' ).val() )
 		{
-			socket.emit( 'message', { nickname:nickname, message:$( '#message-text' ).val() } );
+			socket.emit( 'message', { nickname: nickname, message: $( '#message-text' ).val() } );
 			$( '#message-text' ).val( '' );
 		}
 
 		return false;
 	} );
+
+	history.pushState( { room_name: room_name, nickname: nickname }, '<%= title %> | chat room(<%= room_name %>)', '/chat/<%= room_name %>/<%= nickname %>' );
 </script>
 </body>
 </html>
