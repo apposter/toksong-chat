@@ -23,7 +23,6 @@ io.on( 'connection', function( socket )
 
 		if( socket.room_name )
 		{
-			console.log( 'send message' );
 			io.to( socket.room_name ).emit( 'message', data );
 		}
 	} );
@@ -34,10 +33,7 @@ io.on( 'connection', function( socket )
 		{
 			console.log( 'disconnected socket.id = ' + socket.id + ', idx = ', rooms[ socket.room_name ].indexOf( socket ) );
 
-			if( rooms[ socket.room_name ].indexOf( socket ) > -1 )
-				rooms[ socket.room_name ].splice( rooms[ socket.room_name ].indexOf( socket ), 1 );
-
-			console.log( 'rooms[ ' + socket.room_name + ' ].length', rooms[ socket.room_name ].length );
+			leaveRoom( socket );
 
 			if( !rooms[ socket.room_name ].length )
 			{
@@ -45,8 +41,8 @@ io.on( 'connection', function( socket )
 
 				rooms[ socket.room_name ] = null;
 //				delete rooms[ socket.room_name ];
-				
-				io.sockets.emit( 'rooms', rooms );
+
+				io.sockets.emit( 'rooms', getRooms() );
 			}
 		}
 
@@ -56,39 +52,88 @@ io.on( 'connection', function( socket )
 
 	socket.on( 'join', function( data )
 	{
-		console.log( 'join : ', data );
+//		console.log( 'join : ', data );
+
+		if( socket.room_name )
+		{
+			leaveRoom( socket );
+		}
 
 		socket.room_name = data.room_name;
 		socket.nickname = data.nickname;
 		socket.join( data.room_name );
 
 		if( !rooms[ data.room_name ] )
-		{
 			rooms[ data.room_name ] = [];
-		}
 
 		rooms[ data.room_name ].push( socket );
 		console.log( 'joined socket.id = ' + socket.id + ', idx = ', rooms[ socket.room_name ].indexOf( socket ) );
+		console.log( 'room : ', getClientsInRoom( data.room_name ) );
 
-		io.to( data.room_name ).emit( 'join', { clients: getClients(), rooms: Object.keys( rooms ) } );
+//		io.sockets.emit( 'rooms', getRooms() );
+		io.to( data.room_name ).emit( 'join',
+			{
+				clients             : getClients(),
+				clients_in_this_room: getClientsInRoom( data.room_name ),
+				room_name           : data.room_name,
+				nickname            : data.nickname
+			} );
+		io.to( data.room_name ).emit( 'message', getSystemMsg( data.nickname + ' joined to ROOM(' + data.room_name + ')' ) );
+		io.sockets.emit( 'rooms', getRooms() );
+	} );
+
+	socket.on( 'left-room', function( data )
+	{
+		io.to( data.room_name ).emit( 'message', getSystemMsg( data.nickname + ' left ROOM(' + data.room_name + ')' ) );
+		socket.emit( 'clients-in-this-room', getClientsInRoom( data.room_name ) );
+	} );
+
+	socket.on( 'clients-in-this-room', function()
+	{
+		socket.emit( 'clients-in-this-room', getClientsInRoom( data.room_name ) );
 	} );
 } );
+
+var getSystemMsg = function( msg )
+{
+	return { nickname: 'SYSTEM', message: msg, css: { color: '#0f0', background: '#aaa' } }
+};
 
 var getRooms = function()
 {
 	var rooms = [];
 
-	for( var key in io.sockets.adapter.rooms )
+//	for( var key in io.sockets.adapter.rooms )
+//	{
+//		if( !io.sockets.connected[ key ] && Object.keys( io.sockets.adapter.rooms[ key ] ).length )
+//		{
+//			console.log( 'key of rooms : ', key );
+//			console.log( 'value for ' + key + ' in connected array : ', io.sockets.connected[ key ]  );
+//			rooms.push( key );
+//		}
+//	}
+
+	for( var key in global.rooms )
 	{
-		if( !io.sockets.connected[ key ] && Object.keys( io.sockets.adapter.rooms[ key ] ).length )
-		{
-			console.log( 'key of rooms : ', key );
-			console.log( 'value for ' + key + ' in connected array : ', io.sockets.connected[ key ]  );
+		if( global.rooms[ key ] )
 			rooms.push( key );
-		}
 	}
 
 	return rooms;
+};
+
+var getClientsInRoom = function( room_name )
+{
+	var clients_in_room = {};
+
+	for( var i = 0; i < global.rooms[ room_name ].length; i++ )
+	{
+			clients_in_room[ global.rooms[ room_name ][ i ].id ] = global.rooms[ room_name ][ i ].nickname;
+	}
+
+	console.log( 'clients_in_room[ ' + room_name + ' ] : ', clients_in_room );
+
+	return clients_in_room;
 };
 
 var getClients = function()
@@ -102,6 +147,20 @@ var getClients = function()
 
 	return clientsJSON;
 };
+
+var leaveRoom = function( socket )
+{
+	socket.leave( socket.room_name );
+
+	if( rooms[ socket.room_name ].indexOf( socket ) > -1 )
+		rooms[ socket.room_name ].splice( rooms[ socket.room_name ].indexOf( socket ), 1 );
+
+	console.log( 'leave room[ ' + socket.room_name + ' ] : ', rooms[ socket.room_name ].length );
+
+	io.to( socket.room_name ).emit( 'clients-in-this-room', getClientsInRoom( socket.room_name ) );
+
+	var clientsInRoom = getClientsInRoom( socket.room_name );
+}
 
 var port = process.env.PORT || 3000;
 

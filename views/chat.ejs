@@ -5,15 +5,20 @@
 <link rel='stylesheet' href='/css/style.css' />
 </head>
 <body class="chat">
-<h1><%= title %> : chat room(<%= room_name %>)</h1>
+<h1 id="chat-service-info"><%= title %> : chat room(<%= room_name %>)</h1>
 
 <div id="rooms" class="list-wrap first">
-	<h2 class="header">rooms</h2>
+	<h2 class="header">rooms <a href="/chat/users" id="refresh-rooms" class="clickable">refresh</a></h2>
 	<div class="list"></div>
 </div>
 
 <div id="clients" class="list-wrap">
-	<h2 class="header">users</h2>
+	<h2 class="header">users <a href="/chat/users" id="refresh-clients" class="clickable">refresh</a></h2>
+	<div class="list"></div>
+</div>
+
+<div id="clients-in-this-room" class="list-wrap">
+	<h2 class="header">users in this room <a href="/chat/users/current+room" id="refresh-clients-in-this-room" class="clickable">refresh</a></h2>
 	<div class="list"></div>
 </div>
 
@@ -23,6 +28,7 @@
 </div>
 
 <form action="/chat/<%= room_name %>/<%= nickname %>" method="post" id="message-form">
+	<span id="whisper"></span>
 	<input type="text" id="message-text" name="message-text" />
 	<input type="submit" value="send" />
 </form>
@@ -33,17 +39,55 @@
 	var room_name = '<%= room_name %>';
 	var nickname = '<%= nickname %>';
 	var socket = io.connect();
+
 	var updateRooms = function( data )
 	{
 		$( '#rooms .list' ).empty();
 		for( var i = 0; i < data.length; i++ )
 		{
-			var $room = $( '<div data-room="' + data[ i ] + '">' + data[ i ] + '</div>' );
+			var $room = $( '<div class="clickable" data-room="' + data[ i ] + '">' + data[ i ] + '</div>' );
+			$room.on( 'click', function()
+			{
+				if( room_name !== $( this ).data( 'room' ) )
+				{
+					socket.emit( 'left-room', { room_name: room_name, nickname: nickname } );
+					socket.emit( 'join', { room_name: $( this ).data( 'room' ), nickname: nickname } );
+				}
+			} );
+
 			$( '#rooms .list' ).append( $room );
 		}
-	}
+	};
 
-	socket.on( 'message', function( data )
+	var updateClients = function( data )
+	{
+		$( '#clients .list' ).empty();
+		for( var key in data )
+		{
+			if( socket.io.engine.id !== key )
+			{
+				var $user = $( '<div class="clickable" data-socket-id="' + key + '">' + data[ key ] + '</div>' );
+				$( '#clients .list' ).append( $user );
+			}
+		}
+	};
+
+	var updateClientsInThisRoom = function( data )
+	{
+		console.log( 'clients-in-this-room  : ', data );
+
+		$( '#clients-in-this-room .list' ).empty();
+		for( var key in data )
+		{
+			if( socket.io.engine.id !== key )
+			{
+				var $user = $( '<div class="clickable" data-socket-id="' + key + '">' + data[ key ] + '</div>' );
+				$( '#clients-in-this-room .list' ).append( $user );
+			}
+		}
+	};
+
+	var addMessage = function( data )
 	{
 		console.log( 'message : ', data );
 
@@ -52,26 +96,47 @@
 		if( data.nickname === nickname )
 			$message.css( 'background', '#eee' );
 
+		if( data.css )
+			$message.css( data.css );
+
 		$( '#messages .list' ).append( $message );
+	};
+
+	socket.on( 'message', function( data )
+	{
+		addMessage( data );
 	} );
 
 	socket.on( 'join', function( data )
 	{
 		console.log( 'join : ', data );
 
-		$( '#client-list .list' ).empty();
-		for( var key in data.clients )
+		$( 'title' ).html( '<%= title %> | chat room(' + data.room_name + ')' );
+		$( '#chat-service-info' ).html( '<%= title %> : chat room(' + data.room_name + ')' );
+
+		if( room_name !== data.room_name )
 		{
-			var $user = $( '<div data-socket="' + key + '">' + data.clients[ key ] + '</div>' );
-			$( '#clients .list' ).append( $user );
+			room_name = data.room_name;
+			history.pushState( { room_name: data.room_name, nickname: data.nickname }, '<%= title %> | chat room(' + data.room_name + ')', '/chat/' + data.room_name + '/' + data.nickname );
 		}
 
-		updateRooms( data.rooms );
+		updateClients( data.clients );
+		updateClientsInThisRoom( data.clients_in_this_room );
 	} );
 
 	socket.on( 'rooms', function( data )
 	{
 		updateRooms( data );
+	} );
+
+	socket.on( 'clients', function( data )
+	{
+		updateClients( data );
+	} );
+
+	socket.on( 'clients-in-this-room', function( data )
+	{
+		updateClientsInThisRoom( data );
 	} );
 
 	socket.emit( 'join', { "room_name": room_name, "nickname": nickname } );
@@ -87,7 +152,8 @@
 		return false;
 	} );
 
-	history.pushState( { room_name: room_name, nickname: nickname }, '<%= title %> | chat room(<%= room_name %>)', '/chat/<%= room_name %>/<%= nickname %>' );
+	if( location.href.indexOf( room_name ) < 0 )
+		history.pushState( { room_name: room_name, nickname: nickname }, '<%= title %> | chat room(<%= room_name %>)', '/chat/<%= room_name %>/<%= nickname %>' );
 </script>
 </body>
 </html>

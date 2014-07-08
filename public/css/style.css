@@ -52,6 +52,28 @@ a
 
 #messages > .list > p > .nickname
 {
-	margin : 0 10px;
-	font-weight  : bold;
+	margin      : 0 10px;
+	font-weight : bold;
+}
+
+.clickable
+{
+	cursor          : pointer;
+	display         : inline-block;
+	padding         : 5px;
+	margin          : 5px;
+	border-radius   : 10px;
+	background      : #aaa;
+	color           : #367cff;
+	font-size       : 14px;
+	text-decoration : none;
+	height          : 20px;
+	line-height     : 20px;
+}
+
+.list .clickable
+{
+	border-radius : 5px;
+	background    : #ccc;
+	color         : #555;
 }
