@@ -54,6 +54,17 @@ a
 {
 	margin      : 0 10px;
 	font-weight : bold;
+	cursor      : pointer;
+}
+
+#messages > .list > .mine
+{
+	background : #eee;
+}
+
+#messages > .list > .whisper
+{
+	background : #ee0;
 }
 
 .clickable
@@ -76,4 +87,38 @@ a
 	border-radius : 5px;
 	background    : #ccc;
 	color         : #555;
+}
+
+#whisper
+{
+	cursor        : pointer;
+	display       : inline-block;
+	background    : #aaa;
+	padding       : 5px 0px 5px 7px;
+	margin        : 5px;
+	border-radius : 10px;
+	display       : none;
+}
+
+#whisper .quit
+{
+	width         : 14px;
+	height        : 14px;
+	border-radius : 7px;
+	background    : #000;
+	border        : 1px solid #000;
+	text-align    : center;
+	line-height   : 14px;
+	font-weight   : bold;
+	color         : #fff;
+}
+
+#whisper .user-name
+{
+	color : #ee0;
+}
+
+#whisper span
+{
+	display : inline-block;
 }

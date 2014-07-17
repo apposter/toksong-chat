@@ -21,7 +21,12 @@ io.on( 'connection', function( socket )
 	{
 		console.log( 'message : ', data );
 
-		if( socket.room_name )
+		if( data[ 'is_whisper' ] )
+		{
+			socket.to( data.to ).emit( 'message', data );
+			socket.emit( 'message', data );
+		}
+		else if( socket.room_name )
 		{
 			io.to( socket.room_name ).emit( 'message', data );
 		}
@@ -88,10 +93,27 @@ io.on( 'connection', function( socket )
 		socket.emit( 'clients-in-this-room', getClientsInRoom( data.room_name ) );
 	} );
 
-	socket.on( 'clients-in-this-room', function()
+	socket.on( 'clients-in-this-room', function( data )
 	{
-		socket.emit( 'clients-in-this-room', getClientsInRoom( data.room_name ) );
+		socket.emit( 'clients-in-this-room', getClientsInRoom( data ) );
 	} );
+
+	socket.on( 'clients', function()
+	{
+		io.sockets.emit( 'clients', getClients() );
+	} );
+
+	socket.on( 'rooms', function()
+	{
+		io.sockets.emit( 'rooms', getRooms() );
+	} );
+
+//	socket.on( 'whisper', function( data )
+//	{
+//		console.log( 'io.engine.clients : ', io.engine.clients );
+//
+//		socket.to( data.to ).emit( 'message', data );
+//	} );
 } );
 
 var getSystemMsg = function( msg )
@@ -119,6 +141,8 @@ var getRooms = function()
 			rooms.push( key );
 	}
 
+	console.log( 'get rooms : ', rooms );
+
 	return rooms;
 };
 
@@ -128,7 +152,7 @@ var getClientsInRoom = function( room_name )
 
 	for( var i = 0; i < global.rooms[ room_name ].length; i++ )
 	{
-			clients_in_room[ global.rooms[ room_name ][ i ].id ] = global.rooms[ room_name ][ i ].nickname;
+		clients_in_room[ global.rooms[ room_name ][ i ].id ] = global.rooms[ room_name ][ i ].nickname;
 	}
 
 	console.log( 'clients_in_room[ ' + room_name + ' ] : ', clients_in_room );
@@ -144,6 +168,8 @@ var getClients = function()
 	{
 		clientsJSON[ val.id ] = val.nickname;
 	} );
+
+	console.log( 'clients : ', clientsJSON );
 
 	return clientsJSON;
 };

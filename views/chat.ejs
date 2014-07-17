@@ -19,7 +19,8 @@
 </div>
 
 <div id="clients-in-this-room" class="list-wrap">
-	<h2 class="header">users in this room <a href="/chat/users/current+room" id="refresh-clients-in-this-room" class="clickable">refresh</a></h2>
+	<h2 class="header">users in this room <a href="/chat/users/current+room" id="refresh-clients-in-this-room"
+	                                         class="clickable">refresh</a></h2>
 	<div class="list"></div>
 </div>
 
@@ -29,7 +30,11 @@
 </div>
 
 <form action="/chat/<%= room_name %>/<%= nickname %>" method="post" id="message-form">
-	<span id="whisper"></span>
+	<span id="whisper">
+		<span>whisper to : </span>
+		<span class="user-name"></span>
+		<span class="quit">X</span>
+	</span>
 	<input type="text" id="message-text" name="message-text" />
 	<input type="submit" value="send" />
 </form>
@@ -40,6 +45,8 @@
 	var room_name = '<%= room_name %>';
 	var nickname = '<%= nickname %>';
 	var socket = io.connect();
+	var isWhisper = false;
+	var whisperTarget;
 
 	var updateRooms = function( data )
 	{
@@ -60,14 +67,28 @@
 		}
 	};
 
+	var userNameHandler = function( e )
+	{
+		$( '#whisper .user-name' ).html( $( this ).html() );
+		whisperTarget = $( this ).data( 'socket-id' );
+		isWhisper = true;
+
+		$( '#whisper' ).show();
+
+		return false;
+	};
+
 	var updateClients = function( data )
 	{
 		$( '#clients .list' ).empty();
+
 		for( var key in data )
 		{
 			if( socket.io.engine.id !== key )
 			{
 				var $user = $( '<div class="clickable" data-socket-id="' + key + '">' + data[ key ] + '</div>' );
+				$user.on( 'click', userNameHandler );
+
 				$( '#clients .list' ).append( $user );
 			}
 		}
@@ -78,11 +99,14 @@
 		console.log( 'clients-in-this-room  : ', data );
 
 		$( '#clients-in-this-room .list' ).empty();
+
 		for( var key in data )
 		{
 			if( socket.io.engine.id !== key )
 			{
 				var $user = $( '<div class="clickable" data-socket-id="' + key + '">' + data[ key ] + '</div>' );
+				$user.on( 'click', userNameHandler );
+
 				$( '#clients-in-this-room .list' ).append( $user );
 			}
 		}
@@ -94,8 +118,15 @@
 
 		var $message = $( '<p><span class="nickname">' + data.nickname + '</span><span class="message">' + data.message + '</span></p>' );
 
+		$message.find( '.nickname' ).on( 'click', userNameHandler );
+
+		if( data.is_whisper )
+		{
+			$message.addClass( 'whisper' );
+		}
+
 		if( data.nickname === nickname )
-			$message.css( 'background', '#eee' );
+			$message.addClass( 'mine' );
 
 		if( data.css )
 			$message.css( data.css );
@@ -140,15 +171,56 @@
 		updateClientsInThisRoom( data );
 	} );
 
+	socket.on( 'rooms', function( data )
+	{
+		updateRooms( data );
+	} );
+
+//	socket.on( 'whisper', function( data )
+//	{
+//		console.log( 'whisper : ', data );
+//	} );
+
 	socket.emit( 'join', { "room_name": room_name, "nickname": nickname } );
 
 	$( '#message-form' ).on( 'submit', function()
 	{
 		if( $( '#message-text' ).val() )
 		{
-			socket.emit( 'message', { nickname: nickname, message: $( '#message-text' ).val() } );
+			socket.emit( 'message', { is_whisper:isWhisper, nickname: nickname, id: socket.id, to: whisperTarget, message: $( '#message-text' ).val() } );
+
 			$( '#message-text' ).val( '' );
 		}
+
+		return false;
+	} );
+
+	$( '#refresh-rooms' ).on( 'click', function()
+	{
+		socket.emit( 'rooms', {} );
+
+		return false;
+	} );
+
+	$( '#refresh-clients' ).on( 'click', function()
+	{
+		socket.emit( 'clients', {} );
+
+		return false;
+	} );
+
+	$( '#refresh-clients-in-this-room' ).on( 'click', function()
+	{
+		socket.emit( 'clients-in-this-room', room_name );
+
+		return false;
+	} );
+
+	$( '#whisper' ).on( 'click', function()
+	{
+		$( this ).hide();
+		isWhisper = false;
+		whisperTarget = '';
 
 		return false;
 	} );

@@ -14,6 +14,10 @@ if( err )
 <%
 }
 %>
+<div id="rooms" class="list-wrap first">
+	<h2 class="header">rooms <a href="/chat/users" id="refresh-rooms" class="clickable">refresh</a></h2>
+	<div class="list"></div>
+</div>
 <form action="/chat" method="post" id="join-chat">
 	<label for="room-name">Room name to join</label>
 	<input type="text" id="room_name" name="room_name" />
@@ -24,8 +28,34 @@ if( err )
 	<input type="submit" value="join" />
 </form>
 
+<script src="/socket.io/socket.io.js"></script>
 <script src="/js/jquery-2.1.1.min.js"></script>
 <script>
+	var socket = io.connect();
+
+	var updateRooms = function( data )
+	{
+		$( '#rooms .list' ).empty();
+		for( var i = 0; i < data.length; i++ )
+		{
+			var $room = $( '<div class="clickable" data-room="' + data[ i ] + '">' + data[ i ] + '</div>' );
+			$room.on( 'click', function()
+			{
+				$( '#room_name' ).val( $( this ).data( 'room' ) );
+				$( '#nickname' ).focus();
+			} );
+
+			$( '#rooms .list' ).append( $room );
+		}
+	};
+
+	socket.on( 'rooms', function( data )
+	{
+		updateRooms( data );
+	} );
+
+	socket.emit( 'rooms', {} );
+
 	$( '#join-chat' ).on( 'submit', function()
 	{
 		if( !$( '#room_name' ).val() )
@@ -42,6 +72,13 @@ if( err )
 		{
 			return true;
 		}
+
+		return false;
+	} );
+
+	$( '#refresh-rooms' ).on( 'click', function()
+	{
+		socket.emit( 'rooms', {} );
 
 		return false;
 	} );
