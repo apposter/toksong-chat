@@ -1,6 +1,6 @@
 body
 {
-	padding : 50px;
+	padding : 10px;
 	font    : 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
@@ -21,16 +21,26 @@ a
 {
 	border        : 3px dashed #000;
 	border-radius : 20px;
-	padding       : 20px;
-	margin        : 10px 0 20px 0;
+	padding       : 0 20px 20px 20px;
+	margin        : 10px 0 40px 0;
 	position      : relative;
 }
 
 .list-wrap > .header
 {
-	position   : absolute;
 	background : #fff;
-	top        : -35px;
+	margin     : -20px 0 5px 0;
+	float      : left;
+	/*	position   : absolute;
+		top        : -35px; */
+}
+
+.list-wrap > .list:before
+{
+	content : '';
+	display : block;
+	width   : 100%;
+	clear   : both;
 }
 
 .list-wrap.first
@@ -43,18 +53,37 @@ a
 	margin-bottom : 50px;
 }
 
+#messages
+{
+
+}
+
+#messages *
+{
+	word-break : break-all;
+	word-wrap  : break-word;
+	/*white-space   : pre;*/
+}
+
+#messages > .list
+{
+	margin-top : 10px;
+	overflow-y : auto;
+}
+
 #messages > .list > p > span
 {
-	display     : inline-block;
 	height      : 20px;
 	line-height : 20px;
 }
 
 #messages > .list > p > .nickname
 {
-	margin      : 0 10px;
+	margin      : 0 10px 0 0;
 	font-weight : bold;
 	cursor      : pointer;
+	background  : #bbb;
+	padding     : 0 5px;
 }
 
 #messages > .list > .mine

@@ -27,6 +27,7 @@
 <div id="messages" class="list-wrap last">
 	<h2 class="header">messages</h2>
 	<div class="list"></div>
+	<div>message window size :  <a href="#" class="clickable" id="msg-size-up">up</a><a href="#" class="clickable" id="msg-size-down">down</a></div>
 </div>
 
 <form action="/chat/<%= room_name %>/<%= nickname %>" method="post" id="message-form">
@@ -47,6 +48,7 @@
 	var socket = io.connect();
 	var isWhisper = false;
 	var whisperTarget;
+	var isMsgWindowSizeFix = false;
 
 	var updateRooms = function( data )
 	{
@@ -132,6 +134,11 @@
 			$message.css( data.css );
 
 		$( '#messages .list' ).append( $message );
+
+		if( isMsgWindowSizeFix )
+			$( '#messages .list' ).animate( { scrollTop: $( '#messages .list' ).prop( 'scrollHeight' ) }, "slow" );
+		else
+			$( 'body' ).animate( { scrollTop: $( 'body' ).prop( 'scrollHeight' ) }, "slow" );
 	};
 
 	socket.on( 'message', function( data )
@@ -176,10 +183,10 @@
 		updateRooms( data );
 	} );
 
-//	socket.on( 'whisper', function( data )
-//	{
-//		console.log( 'whisper : ', data );
-//	} );
+	//	socket.on( 'whisper', function( data )
+	//	{
+	//		console.log( 'whisper : ', data );
+	//	} );
 
 	socket.emit( 'join', { "room_name": room_name, "nickname": nickname } );
 
@@ -187,7 +194,7 @@
 	{
 		if( $( '#message-text' ).val() )
 		{
-			socket.emit( 'message', { is_whisper:isWhisper, nickname: nickname, id: socket.id, to: whisperTarget, message: $( '#message-text' ).val() } );
+			socket.emit( 'message', { is_whisper: isWhisper, nickname: nickname, id: socket.id, to: whisperTarget, message: $( '#message-text' ).val() } );
 
 			$( '#message-text' ).val( '' );
 		}
@@ -221,6 +228,39 @@
 		$( this ).hide();
 		isWhisper = false;
 		whisperTarget = '';
+
+		return false;
+	} );
+
+	var setMessagesListHeight = function()
+	{
+		if( isMsgWindowSizeFix )
+			return ;
+
+		var messagesPositionY = $( '#messages' ).prev().offset().top + $( '#messages' ).prev().outerHeight();
+		var windowHeight = $( window ).height();
+
+		$( '#messages .list' ).height( windowHeight - messagesPositionY - 200 );
+
+		console.log( windowHeight - messagesPositionY );
+	};
+
+	$( window ).on( 'resize', setMessagesListHeight );
+
+	$( '#msg-size-up' ).on( 'click', function()
+	{
+		isMsgWindowSizeFix = true;
+
+		$( '#messages .list' ).height( $( '#messages .list' ).height() + 50 );
+
+		return false;
+	} );
+	$( '#msg-size-down' ).on( 'click', function()
+	{
+		isMsgWindowSizeFix = true;
+
+		if( $( '#messages .list' ).height() - 50 > 200 )
+			$( '#messages .list' ).height( $( '#messages .list' ).height() - 50 );
 
 		return false;
 	} );
