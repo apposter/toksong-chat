@@ -24,13 +24,14 @@ router.route( '/' )
 
 router.get( '/:room_name/:nickname', function( req, res )
 {
-	res.render( 'chat',
-		{
-			title    : 'toksong-chat',
-			room_name: req.params.room_name,
-			nickname : req.params.nickname,
-			res      : res
-		} );
+	var data = { "title": "toksong-chat", "room_name": req.params.room_name, "nickname": req.params.nickname, "res": res };
+
+	if( req.xhr )
+	{
+		res.json( data );
+	}
+	else
+		res.render( 'chat', data );
 } );
 
 module.exports = router;

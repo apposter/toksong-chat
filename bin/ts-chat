@@ -146,6 +146,8 @@ var getRooms = function()
 	return rooms;
 };
 
+global.getRooms = getRooms;
+
 var getClientsInRoom = function( room_name )
 {
 	var clients_in_room = {};
